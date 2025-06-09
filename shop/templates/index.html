@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+  {% if products %}
+    <h1 class="mt-4">Барахолка</h1>
+    {% for product in products %}
+      {% if product.is_active %}
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>{{ product.name }}</h3> {{ product.price }} BYN
+            <br />
+            {% for cat in product.cats %}
+              <div class="badge bg-secondary">{{ cat }}</div>
+            {% endfor %}
+            <br /> <small>объявление создано {{ product.created_at }}</small>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-2">
+                <img src="{{ product.image.url }}" style="height: 200px; width: 200px;" alt="{{ product.name }}" />
+              </div>
+              <div class="col">
+                <h5 class="ms-2">Описание:</h5>
+                <div class="card">
+                  <div class="card-body" style="width: 1000px; height: 100px;">{{ product.description }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary">Подробнее</a>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <h1>Товаров нет</h1>
+  {% endif %}
+{% endblock %}
