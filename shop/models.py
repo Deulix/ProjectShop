@@ -1,6 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.core.exceptions import ValidationError
+
+
+def validate_phone(value):
+    if not value[0] == "+":
+        raise ValidationError("Номер телефона должен быть в формате +XXX...")
+    elif not "".join(value[1:]).isdigit():
+        raise ValidationError("Номер телефона должен состоять из цифр")
 
 
 class Category(models.Model):
@@ -74,3 +82,85 @@ class Comment(models.Model):
     class Meta:
         verbose_name = "комментарий"
         verbose_name_plural = "Комментарии"
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(
+        User, verbose_name=("Пользователь"), null=True, on_delete=models.CASCADE
+    )
+    session_key = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+
+    class Meta:
+        verbose_name = "корзина"
+        verbose_name_plural = "Корзины"
+
+    def __str__(self):
+        return f"#{self.pk} -- Корзина пользователя {self.user} -- создана {self.created_at.strftime('%d-%m-%Y в %H:%M')}"
+    
+
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, verbose_name=("Корзина"), on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product, verbose_name=("Товар"), on_delete=models.CASCADE
+    )
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
+    price = models.DecimalField(verbose_name="Цена", max_digits=8, decimal_places=2)
+
+    class Meta:
+        verbose_name = "предмет корзины"
+        verbose_name_plural = "Предметы корзины"
+
+    def __str__(self):
+        return f"Предмет добавлен в корзину #{self.cart.pk} -- {self.product.created_at.strftime('%d-%m-%Y в %H:%M')} -- {self.product.name} в количестве {self.quantity} шт. -- конечная цена: {self.price} BYN"
+
+
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ("confirmed", "Подтверждено"),
+        ("cancrled", "Отменено"),
+        ("pending", "В обработке"),
+    ]
+    user = models.ForeignKey(
+        User, verbose_name=("Пользователь"), null=True, on_delete=models.CASCADE
+    )
+    first_name = models.CharField(verbose_name="Имя", max_length=50)
+    last_name = models.CharField(verbose_name="Фамилия", max_length=50)
+    email = models.EmailField(max_length=254)
+    phone = models.CharField(
+        verbose_name="Телефон", max_length=15, validators=[validate_phone]
+    )
+    address = models.TextField(verbose_name="Адрес")
+    total_price = models.DecimalField(
+        verbose_name="Итоговая цена", max_digits=8, decimal_places=2
+    )
+    status = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default="pending", verbose_name="Статус"
+    )
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+
+    def __str__(self):
+        return f"#{self.pk} -- Заказ пользователя {self.user} -- создан {self.created_at.strftime('%d-%m-%Y в %H:%M')} -- статус: {self.status} -- итоговая цена: {self.total_price} BYN"
+
+    class Meta:
+        verbose_name = "заказ"
+        verbose_name_plural = "Заказы"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, verbose_name=("Заказ"), on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product, verbose_name=("Товар"), on_delete=models.CASCADE
+    )
+    quantity = models.PositiveIntegerField(verbose_name="Количество")
+    price = models.DecimalField(verbose_name="Цена", max_digits=8, decimal_places=2)
+
+    def __str__(self):
+        return f"Предмет добавлен в заказ #{self.product.pk} -- {self.product.created_at.strftime('%d-%m-%Y в %H:%M')} -- {self.product.name} в количестве {self.quantity} шт. -- конечная цена: {self.price} BYN"
+
+    class Meta:
+        verbose_name = "предмет заказа"
+        verbose_name_plural = "Предметы заказов"
