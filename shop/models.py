@@ -30,9 +30,9 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=50, verbose_name="Название")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена, BYN")
     description = models.TextField(verbose_name="Описание", null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
     updated_at = models.DateTimeField(auto_now=True)
     categories = models.ManyToManyField(Category, verbose_name="Категория")
     slug = models.SlugField(
@@ -52,8 +52,9 @@ class Product(models.Model):
         return [cat.name for cat in self.categories.all()]
 
     def __str__(self):
-        catword = "категории" if self.categories.count() > 1 else "категория"
-        return f"{self.name} -- {self.price} BYN -- активен: {self.is_active} -- {catword}: {', '.join(self.cats)}"
+        # catword = "категории" if self.categories.count() > 1 else "категория"
+        # return f"{self.name} -- {self.price} BYN -- активен: {self.is_active} -- {catword}: {', '.join(self.cats)}"
+        return self.name
 
     class Meta:
         verbose_name = "товар"
@@ -66,18 +67,21 @@ class Product(models.Model):
 
 
 class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="comments"
+        Product, on_delete=models.CASCADE, related_name="comments", verbose_name="Товар"
     )
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    text = models.TextField(verbose_name="Текст")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
     image = models.ImageField(
-        upload_to="images/comments", verbose_name="Изображение", null=True, blank=True
+        upload_to="images/comments",
+        verbose_name="Изображение",
+        null=True,
+        blank=True,
     )
 
     def __str__(self):
-        return f"Комментарий {self.author} на товар {self.product} в {self.created_at}"
+        return f"Комментарий {self.user} на товар {self.product} создан {self.created_at.strftime('%d-%m-%Y в %H:%M')}"
 
     class Meta:
         verbose_name = "комментарий"
@@ -88,17 +92,19 @@ class Cart(models.Model):
     user = models.ForeignKey(
         User, verbose_name=("Пользователь"), null=True, on_delete=models.CASCADE
     )
-    session_key = models.CharField(max_length=50, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    session_key = models.CharField(
+        max_length=50, null=True, blank=True, verbose_name="Ключ сессии"
+    )
+    created_at = models.DateTimeField(
+        auto_now=False, auto_now_add=True, verbose_name="Создано"
+    )
 
     class Meta:
         verbose_name = "корзина"
         verbose_name_plural = "Корзины"
 
     def __str__(self):
-        return f"#{self.pk} -- Корзина пользователя {self.user} -- создана {self.created_at.strftime('%d-%m-%Y в %H:%M')}"
-    
-
+        return f"Корзина #{self.pk} -- пользователь {self.user}"
 
 
 class CartItem(models.Model):
@@ -106,16 +112,15 @@ class CartItem(models.Model):
     product = models.ForeignKey(
         Product, verbose_name=("Товар"), on_delete=models.CASCADE
     )
-    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
-    price = models.DecimalField(verbose_name="Цена", max_digits=8, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество, шт.")
+    price = models.DecimalField(verbose_name="Цена, BYN", max_digits=8, decimal_places=2)
 
     class Meta:
         verbose_name = "предмет корзины"
         verbose_name_plural = "Предметы корзины"
 
     def __str__(self):
-        return f"Предмет добавлен в корзину #{self.cart.pk} -- {self.product.created_at.strftime('%d-%m-%Y в %H:%M')} -- {self.product.name} в количестве {self.quantity} шт. -- конечная цена: {self.price} BYN"
-
+        return f"Предмет #{self.pk} ({self.product.name}) добавлен в корзину #{self.cart.pk} -- количество: {self.quantity} шт. --  цена: {self.price} BYN"
 
 
 class Order(models.Model):
@@ -135,15 +140,17 @@ class Order(models.Model):
     )
     address = models.TextField(verbose_name="Адрес")
     total_price = models.DecimalField(
-        verbose_name="Итоговая цена", max_digits=8, decimal_places=2
+        verbose_name="Итоговая Цена, BYN", max_digits=8, decimal_places=2
     )
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default="pending", verbose_name="Статус"
     )
-    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now=False, auto_now_add=True, verbose_name="Создано"
+    )
 
     def __str__(self):
-        return f"#{self.pk} -- Заказ пользователя {self.user} -- создан {self.created_at.strftime('%d-%m-%Y в %H:%M')} -- статус: {self.status} -- итоговая цена: {self.total_price} BYN"
+        return f"Заказ #{self.pk} -- пользователь {self.user} -- создан {self.created_at.strftime('%d-%m-%Y в %H:%M')}"
 
     class Meta:
         verbose_name = "заказ"
@@ -155,11 +162,12 @@ class OrderItem(models.Model):
     product = models.ForeignKey(
         Product, verbose_name=("Товар"), on_delete=models.CASCADE
     )
-    quantity = models.PositiveIntegerField(verbose_name="Количество")
-    price = models.DecimalField(verbose_name="Цена", max_digits=8, decimal_places=2)
+    quantity = models.PositiveIntegerField(verbose_name="Количество, шт.")
+    price = models.DecimalField(verbose_name="Цена, BYN", max_digits=8, decimal_places=2)
 
     def __str__(self):
-        return f"Предмет добавлен в заказ #{self.product.pk} -- {self.product.created_at.strftime('%d-%m-%Y в %H:%M')} -- {self.product.name} в количестве {self.quantity} шт. -- конечная цена: {self.price} BYN"
+        return f"Предмет #{self.pk} ({self.product.name}) добавлен в  заказ #{self.order.pk} -- количество: {self.quantity} шт. --  цена: {self.price} BYN"
+    
 
     class Meta:
         verbose_name = "предмет заказа"
