@@ -1,11 +1,20 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-  <form action="{% url 'add_product' %}" method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-primary">Добавить товар</button>
-  </form>
   {% if products %}
-    <h1 class="mt-4">Барахолка</h1>
+    <div class="d-flex justify-content-between mt-4">
+      <h1>Главная</h1>
+      <div class="btn-group">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">Категории</button>
+        <div class="dropdown-menu">
+          {% comment %} <a href="{% url 'index' %}">Сначала новые</a>
+          <a href="{% url 'index' old %}">Сначала старые</a> {% endcomment %}
+          {% for category in categories %}
+            <a class="dropdown-item" href="{% url 'category_products' category.slug %}">{{ category.name }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
     {% for product in products %}
       {% if product.is_active %}
         <div class="card mt-4">
@@ -19,9 +28,15 @@
           </div>
           <div class="card-body">
             <div class="row">
-              <div class="col-md-2">
-                <img src="{{ product.image.url }}" style="height: 200px; width: 200px;" alt="{{ product.name }}" />
-              </div>
+              {% if product.image %}
+                <div class="col-md-2">
+                  <img src="{{ product.image.url }}" style="height: 200px; width: 200px;" alt="{{ product.name }}" />
+                </div>
+              {% else %}
+                <div class="col-md-2">
+                  <img src="{% static 'no-image.png' %}" style="height: 200px; width: 200px;" alt="{{ product.name }}" />
+                </div>
+              {% endif %}
               <div class="col">
                 <h5 class="ms-2">Описание:</h5>
                 <div class="card">

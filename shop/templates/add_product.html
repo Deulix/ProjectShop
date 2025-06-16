@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% block content %}
-  {% crispy form %}
+  <div class="container mt-4">
+    <div class="mb-3">
+      <h1>Добавление товара</h1>
+    </div>
+    {% crispy form %}
+  </div>
 {% endblock %}

@@ -1,5 +1,58 @@
-{% extends "base.html" %}
-{% block title %}{{category.name}}{% endblock title %}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  Категория: {{ category.name }}
+{% endblock %}
 {% block content %}
-
-{% endblock content %}
+  {% if products %}
+    <div class="d-flex justify-content-between mt-4">
+      <h1>Категория: {{ category.name }}</h1>
+      <div class="btn-group">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">Категории</button>
+        <div class="dropdown-menu">
+          {% for category in categories %}
+            <a class="dropdown-item" href="{% url 'category_products' category.slug %}">{{ category.name }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% for product in products %}
+      {% if product.is_active %}
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>{{ product.name }}</h3> {{ product.price }} BYN
+            <br />
+            {% for cat in product.cats %}
+              <div class="badge bg-secondary">{{ cat }}</div>
+            {% endfor %}
+            <br /> <small>объявление создано {{ product.created_at }}</small>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% if product.image %}
+                <div class="col-md-2">
+                  <img src="{{ product.image.url }}" style="height: 200px; width: 200px;" alt="{{ product.name }}" />
+                </div>
+              {% else %}
+                <div class="col-md-2">
+                  <img src="{% static 'no-image.png' %}" style="height: 200px; width: 200px;" alt="{{ product.name }}" />
+                </div>
+              {% endif %}
+              <div class="col">
+                <h5 class="ms-2">Описание:</h5>
+                <div class="card">
+                  <div class="card-body" style="width: 1000px; height: 100px;">{{ product.description }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary">Подробнее</a>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <h1 class="mt-4">Товаров заданной категории нет</h1>
+  {% endif %}
+{% endblock %}

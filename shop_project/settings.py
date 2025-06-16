@@ -24,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 # SECRET_KEY = 'os.getenv("SECRET_KEY")' #Для проверки SQLite
 
@@ -92,7 +93,7 @@ DATABASES = {
     }
 }
 
-# DATABASES = { 
+# DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.sqlite3", #Для проверки SQLite
 #         "NAME": BASE_DIR / "db.sqlite3",
@@ -141,6 +142,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+LOGOUT_REDIRECT_URL = "index"
+LOGIN_REDIRECT_URL = "index"
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 10
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 10
 
 
 # Default primary key field type

@@ -30,7 +30,9 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=50, verbose_name="Название")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена, BYN")
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Цена, BYN"
+    )
     description = models.TextField(verbose_name="Описание", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
     updated_at = models.DateTimeField(auto_now=True)
@@ -67,7 +69,9 @@ class Product(models.Model):
 
 
 class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+    )
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="comments", verbose_name="Товар"
     )
@@ -86,6 +90,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = "комментарий"
         verbose_name_plural = "Комментарии"
+        
 
 
 class Cart(models.Model):
@@ -113,7 +118,9 @@ class CartItem(models.Model):
         Product, verbose_name=("Товар"), on_delete=models.CASCADE
     )
     quantity = models.PositiveIntegerField(default=1, verbose_name="Количество, шт.")
-    price = models.DecimalField(verbose_name="Цена, BYN", max_digits=8, decimal_places=2)
+    price = models.DecimalField(
+        verbose_name="Цена, BYN", max_digits=8, decimal_places=2
+    )
 
     class Meta:
         verbose_name = "предмет корзины"
@@ -163,12 +170,14 @@ class OrderItem(models.Model):
         Product, verbose_name=("Товар"), on_delete=models.CASCADE
     )
     quantity = models.PositiveIntegerField(verbose_name="Количество, шт.")
-    price = models.DecimalField(verbose_name="Цена, BYN", max_digits=8, decimal_places=2)
+    price = models.DecimalField(
+        verbose_name="Цена, BYN", max_digits=8, decimal_places=2
+    )
 
     def __str__(self):
         return f"Предмет #{self.pk} ({self.product.name}) добавлен в  заказ #{self.order.pk} -- количество: {self.quantity} шт. --  цена: {self.price} BYN"
-    
 
     class Meta:
         verbose_name = "предмет заказа"
         verbose_name_plural = "Предметы заказов"
+
