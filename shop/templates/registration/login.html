@@ -1,4 +1,14 @@
-{% extends "base.html" %}
-{% block title %}Вход{% endblock title %}
-
+{% extends 'base.html' %}
+{% block title %}
+  Вход
+{% endblock %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <div class="container mt-4">
+    <div class="mb-3">
+      <h1>Вход</h1>
+    </div>
+    {% crispy form %}
+  </div>
+  <p>Ещё не зарегистрированы? <a href="{% url 'register' %}">Зарегистрируйтесь</a>!</p>
 {% endblock %}

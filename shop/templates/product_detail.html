@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}
   {{ product.name }}
 {% endblock %}
+
 {% block content %}
-  <div class="container mt-4">
+  <div class="mt-4">
     <h1>{{ product.name }}</h1>
     <div class="d-flex gap-2" style="height: 20px;">
       <p class="text-muted">{{ product.created_at|date:'d.m.Y H:i' }}</p>
@@ -12,48 +14,59 @@
         <div class="badge bg-secondary">{{ cat }}</div>
       {% endfor %}
     </div>
+
     <div class="row">
-      {% if product.image %}
-        <div class="col-md-4">
-          <img src="{{ product.image.url }}" class="img-fluid" alt="{{ product.name }}" />
-        </div>
-      {% else %}
-        <div class="col-md-6">
-          <img src="{% static 'no-image.png' %}" class="img-fluid" alt="{{ product.name }}" />
-        </div>
-      {% endif %}
+      <div class="col-md-4">
+        <img src="{% if product.image %}
+            {{ product.image.url }}
+          {% else %}
+            {% static 'no-image.png' %}
+          {% endif %}"
+          class="img-fluid"
+          alt="{{ product.name }}" />
+      </div>
+
       <div class="col-md-8">
         <h3 class="text-primary">{{ product.price }} BYN</h3>
         <p>{{ product.description }}</p>
         <a href="{% url 'index' %}" class="btn btn-secondary">Назад</a>
-        {% if comments %}
-          <hr />
-            <div class="d-grid">
-              <h1>Комментарии</h1>
-              <button class="btn btn-primary btn-block" type="button" data-bs-toggle="collapse" data-bs-target="#collapse">Добавить комментарий</button>
-              <div class="collapse" id="collapse">
-                <div class="card card-body">
-                  <form method="post">
-                    {% csrf_token %}
-                    {{ form.text.label_tag }}
-                    {{form.text}}
+        <hr />
+
+        <div class="d-grid">
+          {% if user.is_authenticated %}
+            <button class="btn btn-primary btn-block" type="button" data-bs-toggle="collapse" data-bs-target="#collapse">Добавить комментарий</button>
+            <div class="collapse" id="collapse">
+              <div class="card card-body">
+                <form method="post">
+                  {% csrf_token %}
+                  {{ form.text.label_tag }}
+                  {{ form.text }}
+                  <div>
                     <button type="submit" class="btn btn-primary">Отправить</button>
-                  </form>
-                </div>
-            </div>
-          </div>
-          {% for comment in comments %}
-            <div class="card mt-3">
-              <div class="card-header">
-                <h4>{{ comment.user }}</h4>
+                  </div>
+                </form>
               </div>
-              <div class="card-body">{{ comment.text }}</div>
             </div>
-          {% endfor %}
-        {% else %}
-          <hr />
-          <h1>Комментариев нет</h1>
-        {% endif %}
+          {% endif %}
+
+          {% if comments %}
+            <h1>Комментарии</h1>
+            {% for comment in comments %}
+              <div class="card mt-3">
+                <div class="card-header">
+                  <div class="d-flex justify-content-between">
+                    <h4>{{ comment.user }}</h4>
+                    <small class="text-muted">{{ comment.created_at|date:'d.m.Y H:i' }}</small>
+                  </div>
+                </div>
+                <div class="card-body">{{ comment.text }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <hr />
+            <h1>Комментариев нет</h1>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>

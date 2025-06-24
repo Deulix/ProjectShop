@@ -2,6 +2,8 @@ from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from .models import Category, Comment
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
 
 
 class AddProduct(forms.Form):
@@ -28,12 +30,32 @@ class AddProduct(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.form_method = "post"
         self.helper.layout = Layout(
             *self.fields.keys(), Submit("submit", "Отправить", css_class="btn-primary")
         )
 
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['text']
-        labels = {'text':'Ваш комментарий'}
+        fields = ["text"]
+        labels = {"text": ""}
+        
+
+
+class CustomRegister(UserCreationForm):
+    email = forms.EmailField(label='Email', required=False, help_text="Необязательное поле.")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = "post"
+        self.helper.add_input(Submit("submit", "Зарегистрироваться", css_class="btn-primary"))
+
+class CustomLogin(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = "post"
+        self.helper.add_input(Submit("submit", "Войти", css_class="btn-primary"))

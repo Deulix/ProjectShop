@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Category, Comment
-from .forms import AddProduct, CommentForm
+from .forms import AddProduct, CommentForm, CustomRegister, CustomLogin
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.decorators import login_required
 
 
 
@@ -45,6 +47,7 @@ def product_detail(request, slug):
     return render(request, "product_detail.html", {"product": product, "comments":comments, 'form':form})
 
 
+@login_required
 def add_product(request):
     if request.method == "POST":
         form = AddProduct(request.POST, request.FILES)
@@ -75,3 +78,18 @@ def add_product(request):
         form = AddProduct()
 
     return render(request, "add_product.html", {"form": form})
+
+def register(request):
+    if request.method == "POST":
+        form = CustomRegister(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+    else:
+        form = CustomRegister()
+    return render(request, 'registration/register.html', {'form':form})
+
+class CustomLoginView(LoginView):
+    form_class = CustomLogin
+    template_name = 'registration/login.html'
+    
