@@ -18,7 +18,8 @@ class OrderAdmin(admin.ModelAdmin):
         "first_name",
         "last_name",
         "email",
-        "address",
+        "address_street",
+        "address_building",
         "total_price",
         "status",
     )

@@ -2,14 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator, MaxLengthValidator, RegexValidator
+from django.contrib import admin
+   
+regex_phone_validator = RegexValidator(
+    regex="^[\d+]\d+$",
+    message="Введите корректный номер телефона (например, +375 12 345 67 89)"
+)
 
-
-def validate_phone(value):
-    if not value[0] == "+":
-        raise ValidationError("Номер телефона должен быть в формате +XXX...")
-    elif not "".join(value[1:]).isdigit():
-        raise ValidationError("Номер телефона должен состоять из цифр")
-
+def validate_str(value: str):
+    if not value.isalpha():
+        raise ValidationError("Допустимы только буквенные значения и дефис (-)")
 
 class Category(models.Model):
     name = models.CharField(max_length=50, verbose_name="Название")
@@ -29,7 +32,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=50, verbose_name="Название")
+    name = models.CharField(max_length=100, verbose_name="Название")
     price = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Цена, BYN"
     )
@@ -94,8 +97,8 @@ class Comment(models.Model):
 
 
 class Cart(models.Model):
-    user = models.ForeignKey(
-        User, verbose_name=("Пользователь"), null=True, on_delete=models.CASCADE
+    user = models.OneToOneField(
+        User, verbose_name=("Пользователь"), related_name='cart', on_delete=models.CASCADE
     )
     session_key = models.CharField(
         max_length=50, null=True, blank=True, verbose_name="Ключ сессии"
@@ -110,21 +113,33 @@ class Cart(models.Model):
 
     def __str__(self):
         return f"Корзина #{self.pk} -- пользователь {self.user}"
+    
+    @property
+    def price(self):
+        return sum(item.price for item in self.items.all())
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, verbose_name=("Корзина"), on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, verbose_name=("Корзина"), related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(
         Product, verbose_name=("Товар"), on_delete=models.CASCADE
     )
     quantity = models.PositiveIntegerField(default=1, verbose_name="Количество, шт.")
-    price = models.DecimalField(
-        verbose_name="Цена, BYN", max_digits=8, decimal_places=2
+    created_at = models.DateTimeField(
+        auto_now=False, auto_now_add=True, verbose_name="Создано"
     )
-
     class Meta:
+        ordering = ['-id']
         verbose_name = "предмет корзины"
         verbose_name_plural = "Предметы корзины"
+
+    @property
+    def price(self):
+        return self.product.price * self.quantity
+    
+    @property
+    def price_per_one(self):
+        return self.product.price
 
     def __str__(self):
         return f"Предмет #{self.pk} ({self.product.name}) добавлен в корзину #{self.cart.pk} -- количество: {self.quantity} шт. --  цена: {self.price} BYN"
@@ -132,8 +147,8 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ("confirmed", "Подтверждено"),
-        ("cancrled", "Отменено"),
+        ("confirmed", "Подтвержден"),
+        ("canceled", "Отменен"),
         ("pending", "В обработке"),
     ]
     user = models.ForeignKey(
@@ -143,12 +158,13 @@ class Order(models.Model):
     last_name = models.CharField(verbose_name="Фамилия", max_length=50)
     email = models.EmailField(max_length=254)
     phone = models.CharField(
-        verbose_name="Телефон", max_length=15, validators=[validate_phone]
+        verbose_name="Телефон", max_length=15, validators=[regex_phone_validator, MinLengthValidator(10)]
     )
-    address = models.TextField(verbose_name="Адрес")
-    total_price = models.DecimalField(
-        verbose_name="Итоговая Цена, BYN", max_digits=8, decimal_places=2
-    )
+    address_street = models.CharField(verbose_name="Улица", max_length=100, validators=[validate_str])
+    address_building = models.PositiveIntegerField(verbose_name="Номер дома", null=True, blank=True, validators=[MaxValueValidator(300)])
+    address_apartment = models.PositiveIntegerField(verbose_name="Квартира", null=True, blank=True, validators=[MaxValueValidator(2000)])
+    address_floor = models.PositiveIntegerField(verbose_name="Этаж", null=True, blank=True, validators=[MaxValueValidator(50)])
+    discount = models.IntegerField("Скидка(от 0 до 100), %", null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default="pending", verbose_name="Статус"
     )
@@ -159,20 +175,37 @@ class Order(models.Model):
     def __str__(self):
         return f"Заказ #{self.pk} -- пользователь {self.user} -- создан {self.created_at.strftime('%d-%m-%Y в %H:%M')}"
 
+    @property
+    def price(self):
+        return sum(item.price for item in self.items.all())
+
+    @property
+    def discount_amount(self):
+        return  self.price / 100 * self.discount
+
+    @property
+    # @admin.display(description='Итоговая цена')
+    def total_price(self):
+        if self.discount is None:
+            return self.price
+        else:
+            return self.price - (self.price / 100 * self.discount)
+
     class Meta:
         verbose_name = "заказ"
         verbose_name_plural = "Заказы"
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, verbose_name=("Заказ"), on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, verbose_name=("Заказ"), related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(
         Product, verbose_name=("Товар"), on_delete=models.CASCADE
     )
     quantity = models.PositiveIntegerField(verbose_name="Количество, шт.")
-    price = models.DecimalField(
-        verbose_name="Цена, BYN", max_digits=8, decimal_places=2
-    )
+   
+    @property
+    def price(self):
+        return self.product.price * self.quantity
 
     def __str__(self):
         return f"Предмет #{self.pk} ({self.product.name}) добавлен в  заказ #{self.order.pk} -- количество: {self.quantity} шт. --  цена: {self.price} BYN"

@@ -10,6 +10,9 @@
       <div class="btn-group">
         <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">Категории</button>
         <div class="dropdown-menu">
+            <a href="/?sort=new" class="dropdown-item">сначала новые</a>
+            <a href="/?sort=old" class="dropdown-item">сначала старые</a>
+            <li><hr class="dropdown-divider"></hr></li>
           {% for category in categories %}
             <a class="dropdown-item" href="{% url 'category_products' category.slug %}">{{ category.name }}</a>
           {% endfor %}

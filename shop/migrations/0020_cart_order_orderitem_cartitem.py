@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                 ('first_name', models.CharField(max_length=50, verbose_name='Имя')),
                 ('last_name', models.CharField(max_length=50, verbose_name='Фамилия')),
                 ('email', models.EmailField(max_length=254)),
-                ('phone', models.CharField(max_length=15, validators=[shop.models.validate_phone], verbose_name='Телефон')),
+                ('phone', models.CharField(max_length=15, verbose_name='Телефон')),
                 ('address', models.TextField(verbose_name='Адрес')),
                 ('total_price', models.DecimalField(decimal_places=2, max_digits=8, verbose_name='Итоговая цена')),
                 ('status', models.CharField(choices=[('confirmed', 'Подтверждено'), ('cancrled', 'Отменено'), ('pending', 'В обработке')], default='pending', max_length=10)),

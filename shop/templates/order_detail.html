@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Заказ #{{ order.pk }}
+{% endblock %}
+
+{% block content %}
+  <div class="mt-4 mt-4">
+    <h1>Заказ #{{ order.pk }}</h1> Создан {{ order.created_at }}
+    <div class="card mt-4">
+      <div class="card-header">
+        <div class="d-flex gap-3">
+          <h5>
+            Статус заказа:
+            <span class="badge {% if order.status == 'confirmed' %}bg-success
+                                {% elif order.status == 'pending' %}bg-warning
+                                {% else %}bg-danger
+                                {% endif %}">
+              {{ order.get_status_display }}
+            </span>
+          </h5>
+        </div>
+      </div>
+      <div class="card-body">
+        <h5>Товары:</h5>
+        {% for item in order.items.all %}
+          <a href="{% url 'product_detail' item.product.slug %}">{{ item.product }}</a> -- {{ item.quantity }}шт. -- {{ item.price }} BYN <br />
+        {% endfor %}
+        <hr />
+        <h5>Контактная информация:</h5>
+        <p>Имя: {{ order.first_name }}</p>
+        <p>Фамилия: {{ order.last_name }}</p>
+        <p>Email: {{ order.email }}</p>
+        <p>Телефон: {{ order.phone }}</p>
+        <p>Адрес: Улица {{ order.address_street }}, дом {{order.address_building}}, квартира {{order.address_apartment}}, этаж {{order.address_floor}}</p>
+        <hr />
+        <p>Предварительная стоимость: {{ order.price }} BYN</p>
+        {% if order.discount %}
+          Скидка: {{ order.discount }}% -- {{ order.discount_amount }} BYN <br />
+        {% endif %}
+        <hr /><h3>Итоговая стоимость: {{ order.total_price }} BYN</h3>
+      </div>
+      {% if order.status == 'pending' %}
+        <div class="card-footer">
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'profile' user.pk %}" class="btn btn-secondary">Назад</a>
+            <form action="{% url 'pay' order.pk %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success">Оплатить заказ</button>
+            </form>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#myModal">Отменить заказ</button>
+            <div class="modal fade" id="myModal">
+              <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="modal-title">Внимание!</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+
+                  <div class="modal-body">Вы уверены, что хотите отменить заказ?</div>
+
+                  <div class="modal-footer">
+                    <form action="{% url 'cancel' order.pk %}" method="post">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger">Отменить заказ</button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Назад</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% elif user.is_superuser %}
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+          <a href="{% url 'profile' user.pk %}" class="btn btn-secondary">Назад</a>
+          <form action="{% url 'set_pending' order.pk %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">АДМИН:Вернуть в обработку</button>
+          </form></div>
+        </div>
+      {% else %}
+        <div class="card-footer">
+          <a href="{% url 'profile' user.pk %}" class="btn btn-secondary">Назад</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

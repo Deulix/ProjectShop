@@ -7,8 +7,11 @@
       <div class="btn-group">
         <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">Категории</button>
         <div class="dropdown-menu">
-          {% comment %} <a href="{% url 'index' %}">Сначала новые</a>
-          <a href="{% url 'index' old %}">Сначала старые</a> {% endcomment %}
+          <a href="?sort=new" class="dropdown-item">сначала новые</a>
+          <a href="?sort=old" class="dropdown-item">сначала старые</a>
+          <li><hr class="dropdown-divider"></hr></li>
+          {% comment %} <a class="dropdown-item" href="{% url 'index' %}">сначала новые</a> {% endcomment %}
+          {% comment %} <a class="dropdown-item" href="{% url 'category_old' %}">сначала старые</a> {% endcomment %}
           {% for category in categories %}
             <a class="dropdown-item" href="{% url 'category_products' category.slug %}">{{ category.name }}</a>
           {% endfor %}

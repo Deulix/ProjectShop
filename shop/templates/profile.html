@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Профиль {{ user.username }}
+{% endblock %}
+
+{% block content %}
+  <div class="mt-4 mt-4">
+    <h1>Профиль {{ user.username }}</h1>
+    {% if orders %}
+    <p>Общее количество заказов: {{ orders.count }}</p>
+    {% for order in orders %}
+      <div class="card mt-4">
+        <div class="card-header">
+            <div class="d-flex gap-3">
+          <h5>Заказ #{{ order.pk }} от {{order.created_at}}
+          <span class="badge bg-{% if order.status == 'confirmed' %}success
+          {% elif order.status == 'pending' %}warning
+          {% else %}danger{% endif %}">
+          {{ order.get_status_display }}
+        </span></h5>
+    </div>
+    </div>
+    <div class="card-body">
+        {% for item in order.items.all %}
+        {{item.product}} -- {{item.quantity}}шт. -- {{item.price}} BYN <br>
+        {% endfor %}
+        <hr>
+        {% if order.discount %}Скидка: {{order.discount}}% -- {{order.discount_amount}} BYN <br>{% endif %} 
+        Общая стоимость: {{order.total_price}} BYN
+        </div>
+        <div class="card-footer"><a href="{% url 'order_detail' order.pk %}" class="btn btn-primary">Подробнее о заказе</a></div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+        <h1>Заказов пока нет.</h1> <a href="{% url 'index' %}">Вперёд за покупками!</a>
+
+  {% endif %}
+{% endblock %}
