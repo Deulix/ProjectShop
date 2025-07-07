@@ -173,6 +173,7 @@ def pay(request, pk):
     if request.method == "POST":
         order.status = "confirmed"
         order.save()
+        messages.success(request, "Ваш заказ успешно оформлен! Благодарим за оплату!")
         return redirect("profile", pk=request.user.pk)
     return redirect("index")
 
