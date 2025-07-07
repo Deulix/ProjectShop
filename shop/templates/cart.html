@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Корзина
+{% endblock %}
+
+{% block content %}
+  <div class="mt-4">
+    {% if items %}
+      <div class="container mt-3">
+  <h1>Корзина</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Товар</th>
+        <th>Цена за единицу, BYN</th>
+        <th>Количество, шт.</th>
+        <th>Сумма, BYN</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for item in cart.items.all %}
+    <tr>
+        <td><a href="{% url 'product_detail' item.product.slug %}">{{ item.product }}</a></td>
+        <td>{{item.price_per_one}}</td>
+        <td><a href="{% url 'cart_remove_amount' item.product.slug %}" class="btn btn-primary btn-sm">-</a> {{ item.quantity }} <a href="{% url 'cart_add_amount' item.product.slug %}" class="btn btn-primary btn-sm">+
+        </a></td>
+        <td>{{ item.price }}</td>
+        <td><form action="{% url 'delete_from_cart' item.product.slug %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+            </form></td>
+            
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <button class="btn btn-primary btn-block mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse">Перейти к оформлению заказа</button>
+            <div class="collapse" id="collapse">
+              <div class="card card-body mb-2">
+                <form method="post">
+                  {% csrf_token %}
+                  {{ form.first_name.label_tag }}
+                  {{ form.first_name }} <br><br>
+                  {{ form.last_name.label_tag }}
+                  {{ form.last_name }}<br><br>
+                  {{ form.email.label_tag }}
+                  {{ form.email }}<br><br>
+                  {{ form.phone.label_tag }}
+                  {{ form.phone }}<br><br>
+                  {{ form.address_street.label_tag }}
+                  {{ form.address_street }}
+                  {{ form.address_building.label_tag }}
+                  {{ form.address_building }}
+                  {{ form.address_apartment.label_tag }}
+                  {{ form.address_apartment }}
+                  {{ form.address_floor.label_tag }}
+                  {{ form.address_floor }}
+                  <div>
+                    <button type="submit" class="btn btn-primary mt-2">Оформить заказ</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+    <h3>Итого: {{cart.price}} BYN</h3>
+    </div>
+</div>
+    {% else %}
+      <h1>Ваша корзина пуста</h1>
+      Может, стоит <a href="{% url 'index' %}">добавить</a> в неё что-то?
+    {% endif %}
+    
+  </div>
+{% endblock %}
